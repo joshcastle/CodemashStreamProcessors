@@ -16,7 +16,7 @@ pipeline:
         request_map: 'root.name = this.ghost.name' 
         processors:
           - http:
-              url: http://ghost-occupation-spring-boot:8080/ghost/occupation/${! json().name }
+              url: http://ghost-occupation-svc:8080/ghost/occupation/${! json().name }
               verb: GET
         result_map: root.ghost.additionalInformation = this
 

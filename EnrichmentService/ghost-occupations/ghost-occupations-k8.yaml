@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost-occupation-deployment
+  labels:
+    app: ghost-occupation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ghost-occupation
+  template:
+    metadata:
+      labels:
+        app: ghost-occupation
+    spec:
+      containers:
+      - name: ghost-occupation
+        image: joshcastle13/ghost-occupations:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "768Mi"
+            cpu: "1"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ghost-occupation-svc
+  labels:
+    environment: development
+spec:
+  type: "LoadBalancer"
+  ports:
+    - name: "http"
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: ghost-occupation
+status:
+  loadBalancer: {}
+
+
+

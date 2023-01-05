@@ -509,6 +509,11 @@ output:
 
 Finally, we will look at how we can enrich a stream by calling out to another service to add data. In this example we want to know what the occupation is of the specter in question.
 
+Lets deploy a simple rest service that we can call out to from our stream processor:
+```bash
+kubectl apply -f ../EnrichmentService/ghost-occupations/ghost-occupations-k8.yaml
+```
+Let's start our enrichment processor: 
 ```bash
 curl http://localhost:4195/streams/5-enrich --data-binary @configs/streams/5-enrich.yaml
 ```
@@ -611,11 +616,16 @@ curl -X DELETE http://localhost:4195/resources/input/input_new_ghostbusters_film
 By the way, PATCH and PUT work as expected, too.
 
 ### Delete Benthos
-
 Now let’s delete our local benthos deployment:
 
 ```bash
 kubectl delete -f ./benthos-kubernetes.yaml
+```
+
+### Delete Enrichment Service
+And delete the enrichment service
+```bash
+kubectl delete -f ../EnrichmentService/ghost-occupations/ghost-occupations-k8.yaml
 ```
 
 ### Tear Down the Kafka Cluster
