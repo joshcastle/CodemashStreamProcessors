@@ -1,0 +1,119 @@
+#
+# This values.yaml sets up a single replica broker, a single zookeeper and a single schema registry
+# It is meant to enable a demo environment for the different connectors running locally on Docker Desktop.
+#
+
+## ------------------------------------------------------
+## Kafka
+## ------------------------------------------------------
+cp-kafka:
+  brokers: 1
+  image: confluentinc/cp-kafka
+  imageTag: 6.0.1
+  ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
+  ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+  #  - name: "regcred"
+  heapOptions: "-Xms512M -Xmx512M"
+  persistence:
+    enabled: true
+    # storageClass: ""
+    size: 1Gi
+    disksPerBroker: 1
+  resources: {}
+  ## If you do want to specify resources, uncomment the following lines, adjust them as necessary,
+  ## and remove the curly braces after 'resources:'
+  #  limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  #  requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  securityContext:
+    runAsUser: 0
+
+  configurationOverrides:
+    "offsets.topic.replication.factor": "1"
+    "default.replication.factor": 1
+    "transaction.state.log.replication.factor": 1
+    "transaction.state.log.min.isr": 1
+    "min.insync.replicas": 1
+    "metric.reporters": ""
+    "confluent.support.metrics.enable=false": false
+
+  customEnv:
+    # KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+    # CONFLUENT_TELEMETRY_ENABLED: "false"
+
+  # Turn off the metrics for the demo to lighten the resource load
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+## ------------------------------------------------------
+## Zookeeper
+## ------------------------------------------------------
+cp-zookeeper:
+  enabled: true
+  servers: 1
+  image: confluentinc/cp-zookeeper
+  imageTag: 6.0.1
+  ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
+  ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+  #  - name: "regcred"
+  heapOptions: "-Xms512M -Xmx512M"
+  persistence:
+    enabled: true
+    ## The size of the PersistentVolume to allocate to each Zookeeper Pod in the StatefulSet. For
+    ## production servers this number should likely be much larger.
+    ##
+    ## Size for Data dir, where ZooKeeper will store the in-memory database snapshots.
+    dataDirSize: 1Gi
+    # dataDirStorageClass: ""
+    ## Size for data log dir, which is a dedicated log device to be used, and helps avoid competition between logging and snaphots.
+    dataLogDirSize: 1Gi
+    # dataLogDirStorageClass: ""
+
+  # TODO: find correct security context for user in this zk-image
+  securityContext:
+    runAsUser: 0
+
+  resources: {}
+  ## If you do want to specify resources, uncomment the following lines, adjust them as necessary,
+  ## and remove the curly braces after 'resources:'
+  #  limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  #  requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  # Turn off the metrics for the demo to lighten the resource load
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+# Disable everything else
+cp-schema-registry:
+  enabled: false
+
+cp-control-center:
+  enabled: false
+
+cp-kafka-rest:
+  enabled: false
+
+cp-ksql-server:
+  enabled: false
+
+cp-kafka-connect:
+  enabled: false

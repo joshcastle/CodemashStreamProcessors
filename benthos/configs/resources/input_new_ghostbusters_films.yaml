@@ -1,0 +1,9 @@
+label: "input_new_ghostbusters_films"
+kafka:
+  addresses:
+    - ${INTERNAL_KAFKA_BOOTSTRAP_SERVER}
+  topics:
+    - "Specter_Activity"
+  target_version: 3.0.0
+  consumer_group: benthos_new_ghostbusters_films_pipeline
+  checkpoint_limit: 1024

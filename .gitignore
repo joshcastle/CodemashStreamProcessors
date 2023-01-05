@@ -1,0 +1,5 @@
+# VSCode Workspace Settings
+.vscode
+
+# Docker .env files
+.env

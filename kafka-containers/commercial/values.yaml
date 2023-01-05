@@ -1,0 +1,499 @@
+#
+# This values.yaml sets up a single replica broker, a single zookeeper and a single schema registry
+# It is meant to enable a demo environment for the different connectors running locally on Docker Desktop.
+#
+
+## ------------------------------------------------------
+## Kafka
+## ------------------------------------------------------
+cp-kafka:
+  image: confluentinc/cp-server
+  imageTag: 6.0.1
+  ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
+  ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+  #  - name: "regcred"
+
+  brokers: 1
+
+  heapOptions: "-Xms512M -Xmx512M"
+  persistence:
+    enabled: true
+    # storageClass: ""
+    size: 1Gi
+    disksPerBroker: 1
+
+  resources: {}
+  ## If you do want to specify resources, uncomment the following lines, adjust them as necessary,
+  ## and remove the curly braces after 'resources:'
+  #  limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  #  requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  securityContext:
+    runAsUser: 0
+
+  configurationOverrides:
+    "offsets.topic.replication.factor": "1"
+    "default.replication.factor": 1
+    "transaction.state.log.replication.factor": 1
+    "transaction.state.log.min.isr": 1
+    "min.insync.replicas": 1
+    "confluent.balancer.enable": false
+    "confluent.reporters.telemetry.auto.enable": false
+    "confluent.license.topic.replication.factor": 1
+    "confluent.metrics.reporter.topic.replicas": 1
+    "metric.reporters": ""
+    "confluent.support.metrics.enable": false    
+
+  customEnv:
+    # KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+    # CONFLUENT_TELEMETRY_ENABLED: "false"
+
+  # Turn off the metrics for the demo to lighten the resource load
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+## ------------------------------------------------------
+## Zookeeper
+## ------------------------------------------------------
+cp-zookeeper:
+  enabled: true
+  servers: 1
+  image: confluentinc/cp-zookeeper
+  imageTag: 6.0.1
+  ## Optionally specify an array of imagePullSecrets. Secrets must be manually created in the namespace.
+  ## https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+  #  - name: "regcred"
+  heapOptions: "-Xms512M -Xmx512M"
+  persistence:
+    enabled: true
+    ## The size of the PersistentVolume to allocate to each Zookeeper Pod in the StatefulSet. For
+    ## production servers this number should likely be much larger.
+    ##
+    ## Size for Data dir, where ZooKeeper will store the in-memory database snapshots.
+    dataDirSize: 1Gi
+    # dataDirStorageClass: ""
+    ## Size for data log dir, which is a dedicated log device to be used, and helps avoid competition between logging and snaphots.
+    dataLogDirSize: 1Gi
+    # dataLogDirStorageClass: ""
+
+  # TODO: find correct security context for user in this zk-image
+  securityContext:
+    runAsUser: 0
+
+  resources: {}
+  ## If you do want to specify resources, uncomment the following lines, adjust them as necessary,
+  ## and remove the curly braces after 'resources:'
+  #  limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  #  requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  # Turn off the metrics for the demo to lighten the resource load
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+## ------------------------------------------------------
+## Schema Registry
+## ------------------------------------------------------
+cp-schema-registry:
+  ## Number of Scheme Registry Pod
+  replicaCount: 1
+
+  ## Image Info
+  ## ref: https://hub.docker.com/r/confluentinc/cp-schema-registry/
+  image: confluentinc/cp-schema-registry
+  imageTag: 6.0.1
+
+  ## Specify a imagePullPolicy
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  imagePullPolicy: IfNotPresent
+
+  ## Specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+
+  ## Schema Registry Settings Overrides
+  ## Configuration Options can be found here: https://docs.confluent.io/current/schema-registry/docs/config.html
+  configurationOverrides:
+    "confluent.support.metrics.enable": false
+
+  ## Additional env variables
+  customEnv: {}
+
+  ## The port on which the Schema Registry will be available and serving requests
+  servicePort: 8081
+
+  ## Schema registry JVM Heap Option
+  heapOptions: "-Xms512M -Xmx512M"
+
+  ## You can list load balanced service endpoint, or list of all brokers (which is hard in K8s).  e.g.:
+  ## bootstrapServers: "PLAINTEXT://dozing-prawn-kafka-headless:9092"
+  ## Charts uses Kafka Coordinator Master Election: https://docs.confluent.io/current/schema-registry/docs/design.html#kafka-coordinator-master-election
+  kafka:
+    bootstrapServers: "PLAINTEXT://kafka-demo-cp-kafka-headless:9092"
+
+  resources:
+    {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  ## Custom pod annotations
+  podAnnotations: {}
+
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling constraints
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+
+  ## Privilege and access control settings for a Pod or Container
+  ## https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  securityContext:
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    runAsNonRoot: true
+
+  ## Monitoring
+  ## Schema Registry JMX Settings
+  ## ref: https://docs.confluent.io/current/schema-registry/docs/monitoring.html
+  jmx:
+    port: 5555
+
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+## ------------------------------------------------------
+## Kafka REST Proxy
+## ------------------------------------------------------
+cp-kafka-rest:
+  replicaCount: 1
+
+  ## Image Info
+  ## ref: https://hub.docker.com/r/confluentinc/cp-kafka/
+  image: confluentinc/cp-kafka-rest
+  imageTag: 6.0.1
+
+  ## Specify a imagePullPolicy
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  imagePullPolicy: IfNotPresent
+
+  ## Specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+
+  servicePort: 8082
+
+  ## Kafka rest JVM Heap Option
+  heapOptions: "-Xms512M -Xmx512M"
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  ## Custom pod annotations
+  podAnnotations: {}
+
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling constraints
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+
+  ## Kafka REST configuration options
+  ## ref: https://docs.confluent.io/current/kafka-rest/docs/config.html
+  configurationOverrides:
+    "confluent.support.metrics.enable": false
+    # "consumer.request.timeout.ms": 5000
+
+  ## Additional env variables
+  customEnv: {}
+    # ZOOKEEPER_SASL_ENABLED: "false"
+
+  ## Monitoring
+  ## Kafka REST JMX Settings
+  ## ref: https://docs.confluent.io/current/kafka-rest/docs/monitoring.html
+  jmx:
+    port: 5555
+
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+  ## External Access
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+  external:
+    enabled: false
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    port: 8082
+
+  ## If the Kafka Chart is disabled a URL of zookeeper are required to connect
+  ## e.g. ungaged-sparrow-cp-zookeeper:2181
+  cp-zookeeper:
+    url: "http://kafka-demo-cp-zookeeper:2181"
+
+  ## If the Kafka Chart is disabled a URL and port are required to connect
+  ## e.g. gnoble-panther-cp-schema-registry:8081
+  cp-schema-registry:
+    url: "http://kafka-demo-cp-schema-registry:8081"
+
+  cp-kafka:
+    bootstrapServers: "PLAINTEXT://kafka-demo-cp-kafka-headless:9092"    
+
+## ------------------------------------------------------
+## Kafka KSQL Server
+## ------------------------------------------------------
+cp-ksql-server:
+
+  replicaCount: 1
+
+  ## Image Info
+  ## ref: https://hub.docker.com/r/confluentinc/cp-ksql-server/
+  image: confluentinc/cp-ksqldb-server
+  imageTag: 6.0.1
+
+  ## Specify a imagePullPolicy
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  imagePullPolicy: IfNotPresent
+
+  ## Specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+
+  servicePort: 8088
+
+  ## KSQL JVM Heap Option
+  heapOptions: "-Xms512M -Xmx512M"
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  ## Custom pod annotations
+  podAnnotations: {}
+
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling constraints
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+
+  ## Monitoring
+  ## JMX Settings
+  ## ref: https://docs.confluent.io/current/ksql/docs/operations.html
+  jmx:
+    port: 5555
+
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+  ## External Access
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+  external:
+    enabled: false
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    port: 8088
+
+  ## Headless mode
+  ## ref: https://docs.confluent.io/current/ksql/docs/installation/server-config/index.html
+  ksql:
+    headless: false
+
+  ## You can list load balanced service endpoint, or list of all brokers (which is hard in K8s).  e.g.:
+  ## bootstrapServers: "PLAINTEXT://dozing-prawn-kafka-headless:9092"
+  kafka:
+    bootstrapServers: "PLAINTEXT://kafka-demo-cp-kafka-headless:9092"
+
+  ## e.g. http://gnoble-panther-cp-schema-registry:8081
+  cp-schema-registry:
+    url: "http://kafka-demo-cp-schema-registry:8081"
+
+  # KSQL configuration options
+  ## ref: https://docs.confluent.io/current/ksql/docs/installation/server-config/config-reference.html
+  configurationOverrides:
+    "confluent.support.metrics.enable": false
+    # "ksql.streams.producer.retries": "2147483647"
+
+
+## ------------------------------------------------------
+## Kafka KSQL Server
+## ------------------------------------------------------
+cp-control-center:
+  replicaCount: 1
+
+  ## Image Info
+  ## ref: https://hub.docker.com/r/confluentinc/cp-kafka/
+  image: confluentinc/cp-enterprise-control-center
+  imageTag: 6.0.1
+
+  ## Specify a imagePullPolicy
+  ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+  imagePullPolicy: IfNotPresent
+
+  ## Specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
+  imagePullSecrets:
+
+  serviceHttpPort: 9021
+
+  ## Control Center properties
+  ## ref: 
+  configurationOverrides:
+    "replication.factor": "1"
+    "internal.topics.replication": "1"
+    "monitoring.interceptor.topic.replication": "1"
+    "metrics.topic.replication": "1"
+    "command.topic.replication": "1"
+    "streams.num.stream.threads": "2"
+    "confluent.support.metrics.enable": false
+    # "streams.consumer.request.timeout.ms": "960032"
+    # "rest.listeners": "http://0.0.0.0:9021"
+
+  ## Kafka Connect JVM Heap Option
+  heapOptions: "-Xms512M -Xmx512M"
+
+  ## Additional env variables
+  customEnv: {}
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+    # requests:
+    #  cpu: 100m
+    #  memory: 128Mi
+
+  ## Custom pod annotations
+  podAnnotations: {}
+
+  ## Node labels for pod assignment
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+  nodeSelector: {}
+
+  ## Taints to tolerate on node assignment:
+  ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  ## Pod scheduling constraints
+  ## Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+  affinity: {}
+
+  ## Monitoring
+  ## Kafka JMX Settings
+  ## ref: https://docs.confluent.io/current/kafka/monitoring.html
+  jmx:
+    port: 5555
+
+  ## Prometheus Exporter Configuration
+  ## ref: https://prometheus.io/docs/instrumenting/exporters/
+  prometheus:
+    ## JMX Exporter Configuration
+    ## ref: https://github.com/prometheus/jmx_exporter
+    jmx:
+      enabled: false
+
+  ## You can list load balanced service endpoint, or list of all brokers (which is hard in K8s).  e.g.:
+  ## bootstrapServers: "PLAINTEXT://dozing-prawn-kafka-headless:9092"
+  kafka:
+    bootstrapServers: "PLAINTEXT://kafka-demo-cp-kafka-headless:9092"
+
+  ## If the Kafka Chart is disabled a URL and port are required to connect
+  ## e.g. gnoble-panther-cp-schema-registry:8081
+  cp-schema-registry:
+    url: "http://kafka-demo-cp-schema-registry:8081"
+
+  cp-ksql-server:
+    url: "http://kafka-demo-cp-ksql-server:8088"
+
+  cp-zookeeper:
+    ## If the Zookeeper Chart is disabled a URL and port are required to connect
+    url: "http://kafka-demo-cp-zookeeper:2181"  
+
+
+
+# Disable everything else
+cp-kafka-connect:
+  enabled: false

@@ -1,0 +1,40 @@
+input:
+  resource: "input_new_ghostbusters_films"
+
+pipeline:
+  threads: -1
+  processors:
+    - bloblang: |- # Drop messages if not new films
+        root = if this.ghost.originatingFilm.lowercase() != "Ghostbuster Afterlife" &&
+                  this.vehicle.make.lowercase() != "Ghostbusters (2016)" {
+          deleted()
+        } else {
+        this
+        }
+    - bloblang: |- # Assign topic as metadata and change HAUNTING
+        root = this
+        meta target_topic = "New_Ghostbusters_Films"
+        root.context.type = if this.context.type == "HAUNTING" {
+          "POSSESSING"
+        }
+
+output:
+  label: "output_new_ghostbuster_films"
+  kafka:
+    addresses:
+      - ${EXTERNAL_KAFKA_BOOTSTRAP_SERVER}
+    topic: ${! meta("target_topic") }
+    target_version: 3.0.0
+    key: ${! json().ghost.name }
+    partitioner: fnv1a_hash
+    compression: lz4
+    static_headers: {}
+    metadata:
+      exclude_prefixes:
+        - target_topic
+    max_in_flight: 1
+    batching:
+      count: 0
+      byte_size: 0
+      period: ""
+      check: ""

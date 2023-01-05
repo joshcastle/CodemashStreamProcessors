@@ -1,0 +1,38 @@
+input:
+  label: "input_ghostbuster_movie_router"
+  kafka:
+    addresses:
+      - ${INTERNAL_KAFKA_BOOTSTRAP_SERVER}
+    topics:
+      - "Specter_Activity"
+    target_version: 3.0.0
+    consumer_group: benthos_ghostbuster_movie_router
+    checkpoint_limit: 1024
+
+pipeline:
+  threads: -1
+  processors:
+    - bloblang: |- 
+        meta target_topic = this.ghost.originatingFilm.split(" ").join("-")
+
+output:
+  label: "output_kafka_ghosts_by_movie"
+  kafka:
+    addresses:
+      - ${EXTERNAL_KAFKA_BOOTSTRAP_SERVER}
+    topic: ${! meta("target_topic") }
+    client_id: benthos_kafka_output
+    target_version: 3.0.0
+    key: ${! json().ghost.name }
+    partitioner: fnv1a_hash
+    compression: lz4
+    static_headers: {}
+    metadata:
+      exclude_prefixes:
+        - target_topic
+    max_in_flight: 1
+    batching:
+      count: 0
+      byte_size: 0
+      period: ""
+      check: ""

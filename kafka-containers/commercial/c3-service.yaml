@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: kafka-demo-cp-control-center-lb
+  labels:
+    environment: development
+spec:
+  type: "LoadBalancer"
+  ports:
+    - name: "http"
+      port: 9021
+      targetPort: 9021
+  selector:
+    app: cp-control-center
+status:
+  loadBalancer: {}

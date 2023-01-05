@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: benthos-config
+data:
+  benthos.yaml: |+
+    # Configuration for running in streams
+    # See "streams" directory for stream configurations
+    http:
+      enabled: true
+      address: 0.0.0.0:4195
+      root_path: /benthos
+      debug_endpoints: false
+      cert_file: ""
+      key_file: ""
+      cors:
+        enabled: false
+        allowed_origins: []
+    logger:
+      level: INFO
+      format: json
+      add_timestamp: true
+      static_fields:
+        '@service': benthos
+    metrics:
+      json_api:
+        prefix: benthos
+        path_mapping: ""
+    tracer:
+      none: {}
+    shutdown_timeout: 20s
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: benthos-environment
+data:
+  INTERNAL_KAFKA_BOOTSTRAP_SERVER: kafka-demo-cp-kafka-headless:9092
+  EXTERNAL_KAFKA_BOOTSTRAP_SERVER: kafka-demo-cp-kafka-headless:9092
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: benthos
+  labels:
+    environment: development
+spec:
+  type: "LoadBalancer"
+  ports:
+    - name: "http"
+      port: 4195
+      targetPort: 4195
+  selector:
+    app: benthos
+status:
+  loadBalancer: {}
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: benthos
+  labels:
+    environment: development
+    app: benthos
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      environment: development
+      app: benthos
+
+  template:
+    metadata:
+      labels:
+        environment: development
+        app: benthos
+
+    spec:
+      containers:
+        - name: benthos
+          image: jeffail/benthos:latest
+          imagePullPolicy: IfNotPresent
+          args: ["-c", "/config/benthos.yaml", "streams"]
+          envFrom:
+            - configMapRef:
+                name: benthos-environment
+          ports:
+            - containerPort: 4195
+          volumeMounts:
+            - name: config-mount
+              mountPath: /config
+          livenessProbe:
+            failureThreshold: 1
+            httpGet:
+              path: /ping
+              port: 4195
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ready
+              port: 4195
+              scheme: HTTP
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+      volumes:
+        - name: config-mount
+          configMap:
+            name: benthos-config

@@ -1,0 +1,94 @@
+input:
+  label: "input_ghost_generator"
+  generate:
+    mapping: |
+      let ghosts = [
+        {
+          "name": "Zuul",
+          "originatingFilm": "Ghostbusters",
+          "classLevel": ["6", "7"],
+        },
+        {
+          "name": "Stay Puft Mashmallow Man",
+          "originatingFilm": "Ghostbusters",
+          "classLevel": ["7"],
+        },
+        {
+          "name": "Slimer",
+          "originatingFilm": "Ghostbusters",
+          "classLevel": ["5"],
+        },
+        {
+          "name": "Vigo",
+          "originatingFilm": "Ghostbusters II",
+          "classLevel": ["4", "7"],
+        },
+        {
+          "name": "Scoleri Brothers",
+          "originatingFilm": "Ghostbusters II",
+          "classLevel": ["4"],
+        },
+        {
+          "name": "Muncher",
+          "originatingFilm": "Ghostbusters Afterlife",
+          "classLevel": ["5"],
+        },
+        {
+          "name": "Mini-Puffs",
+          "originatingFilm": "Ghostbusters Afterlife",
+          "classLevel": ["5"],
+        },
+        {
+          "name": "Gertrude Aldridge",
+          "originatingFilm": "Ghostbusters 2016",
+          "classLevel": ["4"],
+        },
+        {
+          "name": "Mayhem",
+          "originatingFilm": "Ghostbusters 2016",
+          "classLevel": ["3", "4", "5"],
+        }
+      ]
+      let event_types = [
+        "HAUNTING",
+        "BEING_CAPTURED",
+        "ESCAPING_CAPTURE",
+        "EXPLODING",
+        "SLIMING",
+        "CAUSING_HAVOC"
+      ]
+      let event_type = $event_types.index( random_int() % $event_types.length() )
+      let ghost = $ghosts.index( random_int() % $ghosts.length() )
+      let id = uuid_v4()
+      let ts = timestamp_unix()
+
+      root = {
+        "context": {
+          "id": $id,
+          "source": "/specter/ghostbusters",
+          "type": $event_type,
+          "time": $ts.format_timestamp(),
+        },
+        "ghost": $ghost,
+      }
+    interval: 1s
+    count: 0
+output:
+  label: "output_kafka_ghosts"
+  kafka:
+    addresses:
+      - ${INTERNAL_KAFKA_BOOTSTRAP_SERVER}
+    topic: "Specter_Activity"
+    target_version: 3.0.0
+    key: ${! json().ghost.name.lowercase() }
+    partitioner: fnv1a_hash
+    compression: lz4
+    static_headers: {}
+    metadata:
+      exclude_prefixes: []
+    max_in_flight: 1
+    batching:
+      count: 0
+      byte_size: 0
+      period: ""
+      check: ""

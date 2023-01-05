@@ -1,0 +1,41 @@
+input:
+  label: "input_enrich_movies"
+  kafka:
+    addresses:
+      - ${INTERNAL_KAFKA_BOOTSTRAP_SERVER}
+    topics:
+      - "Specter_Activity"
+    target_version: 3.0.0
+    consumer_group: benthos_enrich_movies
+    checkpoint_limit: 1024
+
+pipeline:
+  threads: -1
+  processors:
+    - branch:
+        request_map: 'root.name = this.ghost.name' 
+        processors:
+          - http:
+              url: http://ghost-occupation-spring-boot:8080/ghost/occupation/${! json().name }
+              verb: GET
+        result_map: root.ghost.additionalInformation = this
+
+output:
+  label: "output_enrich_movies"
+  kafka:
+    addresses:
+      - ${EXTERNAL_KAFKA_BOOTSTRAP_SERVER}
+    topic: "Ghost_Occupations"
+    target_version: 3.0.0
+    key: ${! json().ghost.name }
+    partitioner: fnv1a_hash
+    compression: lz4
+    static_headers: {}
+    metadata:
+      exclude_prefixes: []
+    max_in_flight: 1
+    batching:
+      count: 0
+      byte_size: 0
+      period: ""
+      check: ""
