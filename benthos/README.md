@@ -134,14 +134,14 @@ for more information on running in streams mode.
 
 ### Fictional Use Case: Specter Activity
 
-In this use case, we will be working with a stream of specters from Ghostbusters films. In Kafka's security model, every consumer of a topic has access to all events on the topic. We need to filter and send events to new topics for each consumer to ensure they only see the messages they're entitled to see.
+In this use case, we will be working with a stream of specters from the Ghostbusters films. In Kafka's security model, every consumer of a topic has access to all events on that topic. We need to filter and send events to new topics for each consumer to ensure they only see the messages they're entitled to see.
 
 Our first consumer only cares about the Orignal Films:
 
 - Ghostbusters
 - Ghostbusters II
 
-Our first consumer only cares about the New Films:
+Our second consumer only cares about the New Films:
 
 - Ghostbusters 2016
 - Ghostbusters Afterlife
@@ -155,7 +155,7 @@ processor to generate mock data.
 We have a simple producer that generates specter activity 👻
 
 ```bash
-curl http://localhost:4195/streams/1-producer --data-binary @benthos/configs/streams/1-producer.yaml
+curl http://localhost:4195/streams/1-producer --data-binary @configs/streams/1-producer.yaml
 ```
 
 Watch the topic via [C3](http://localhost:9021/).
@@ -218,7 +218,7 @@ In our fictional situation, we need separate streams for each proposed consumer.
 topic, so splitting and routing them to specific streams ensures consumers see only the events they’re entitled to see.
 
 ```bash
-curl http://localhost:4195/streams/2-router --data-binary @benthos/configs/streams/2-router.yaml
+curl http://localhost:4195/streams/2-router --data-binary @configs/streams/2-router.yaml
 ```
 
 Watch the topics via [C3](http://localhost:9021/).
@@ -328,7 +328,7 @@ Now we want to consolidate films by original vs new, starting with the
 originals.
 
 ```bash
-curl http://localhost:4195/streams/3-join --data-binary @benthos/configs/streams/3-join.yaml
+curl http://localhost:4195/streams/3-join --data-binary @configs/streams/3-join.yaml
 ```
 
 Watch the topic via [C3](http://localhost:9021/).
@@ -407,7 +407,7 @@ Here we’ll create an
 then be used in our next stream processor.
 
 ```bash
-curl http://localhost:4195/resources/input/input_new_ghostbusters_films --data-binary @benthos/configs/resources/input_new_ghostbusters_films.yaml
+curl http://localhost:4195/resources/input/input_new_ghostbusters_films --data-binary @configs/resources/input_new_ghostbusters_films.yaml
 ```
 
 #### 4. Start the New Films Consolidation
@@ -416,7 +416,7 @@ Next we’ll consolidate the new films using a little different
 approach. We will also update types from Haunting to Possessing, because that seems more modern right?
 
 ```bash
-curl http://localhost:4195/streams/4-filter --data-binary @benthos/configs/streams/4-filter.yaml
+curl http://localhost:4195/streams/4-filter --data-binary @configs/streams/4-filter.yaml
 ```
 
 Watch the topic via [C3](http://localhost:9021/).
@@ -510,7 +510,7 @@ output:
 Finally, we will look at how we can enrich a stream by calling out to another service to add data. In this example we want to know what the occupation is of the specter in question.
 
 ```bash
-curl http://localhost:4195/streams/5-enrich --data-binary @benthos/configs/streams/5-enrich.yaml
+curl http://localhost:4195/streams/5-enrich --data-binary @configs/streams/5-enrich.yaml
 ```
 
 Watch the topic via [C3](http://localhost:9021/).
