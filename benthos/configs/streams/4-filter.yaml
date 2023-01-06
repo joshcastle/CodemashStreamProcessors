@@ -6,7 +6,7 @@ pipeline:
   processors:
     - bloblang: |- # Drop messages if not new films
         root = if this.ghost.originatingFilm.lowercase() != "Ghostbuster Afterlife" &&
-                  this.vehicle.make.lowercase() != "Ghostbusters (2016)" {
+                  this.ghost.originatingFilm.lowercase() != "Ghostbusters (2016)" {
           deleted()
         } else {
         this
