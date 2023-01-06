@@ -35,6 +35,7 @@ cluster running.
     helm-confluent-remote/cp-helm-charts \
     -f ../kafka-containers/commercial/values.yaml
    ```
+>Note: There is currently a known issue with zoo keeper on kuberenetes version 1.25 and higher. See issue [here](https://github.com/confluentinc/cp-helm-charts/issues/620).
 
 1. Port forward Confluent Control Center to localhost:
 
@@ -451,7 +452,7 @@ pipeline:
   processors:
     - bloblang: |- # Drop messages if not new films
         root = if this.ghost.originatingFilm.lowercase() != "Ghostbuster Afterlife" &&
-                  this.vehicle.make.lowercase() != "Ghostbusters (2016)" {
+                  this.ghost.originatingFilm.lowercase() != "Ghostbusters (2016)" {
           deleted()
         } else {
         this
