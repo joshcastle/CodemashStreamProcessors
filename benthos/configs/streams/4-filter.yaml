@@ -5,12 +5,10 @@ pipeline:
   threads: -1
   processors:
     - bloblang: |- # Drop messages if not new films
-        root = if this.ghost.originatingFilm.lowercase() != "Ghostbuster Afterlife" &&
-                  this.ghost.originatingFilm.lowercase() != "Ghostbusters (2016)" {
+        root = if this.ghost.originatingFilm.lowercase() != "ghostbusters afterlife" &&
+                  this.ghost.originatingFilm.lowercase() != "ghostbusters 2016" {
           deleted()
-        } else {
-        this
-        }
+        } 
     - bloblang: |- # Assign topic as metadata and change HAUNTING
         root = this
         meta target_topic = "New_Ghostbusters_Films"
