@@ -1,11 +1,5 @@
-Add the helm Spring Boot Library:
-TBD
-
-Install with helm:
-* `helm upgrade --install ghost-occupation library/spring-boot -f cd/values.yaml`
-
-Uninstall with helm: 
-* `helm delete ghost-occupation`
+Install to K8s:
+`kubectl apply -f ghost-occupations/ghost-occupations-k8.yaml`
 
 Endpoint:
 * `8080/ghost/occupation/{ghost}`
