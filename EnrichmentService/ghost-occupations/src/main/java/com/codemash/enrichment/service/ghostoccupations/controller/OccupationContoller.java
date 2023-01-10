@@ -41,6 +41,9 @@ public class OccupationContoller {
             case "gertrude aldridge":
                 result = "Ghost, Murderer";
                 break;
+            case "stay puft marshmallow man":
+                result = "Huge Marshmallow Destructor Form";
+                break;
             default:
                 break;
         }
