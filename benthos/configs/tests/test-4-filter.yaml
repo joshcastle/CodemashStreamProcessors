@@ -1,0 +1,75 @@
+tests:
+  - name: New Film Filter
+    target_processors: "../streams/4-filter.yaml#/pipeline/processors"
+    input_batch:
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "BEING_CAPTURED"
+          ghost:
+            name: "Zuul"
+            originatingFilm: "Ghostbusters"
+            classLevel: ["6", "7"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "Gertrude Aldridge"
+          ghost:
+            name: "Stay Puft Mashmallow Man"
+            originatingFilm: "Ghostbusters II"
+            classLevel: ["7"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "BEING_CAPTURED"
+          ghost:
+            name: "Slimer"
+            originatingFilm: "Ghostbusters"
+            classLevel: ["5"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "HAUNTING"
+          ghost:
+            name: "Muncher"
+            originatingFilm: "Ghostbusters Afterlife"
+            classLevel: ["6", "7"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "BEING_CAPTURED"
+          ghost:
+            name: "Gertrude Aldridge"
+            originatingFilm: "Ghostbusters 2016"
+            classLevel: ["4"]
+    output_batches:
+      - - json_equals:
+            context:
+              id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+              source: "/specter/ghostbusters"
+              time: "2022-05-19T02:27:56Z"
+              type: "HAUNTING"
+            ghost:
+              name: "Muncher"
+              originatingFilm: "Ghostbusters Afterlife"
+              classLevel: ["6", "7"]
+        - json_equals:
+            context:
+              id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+              source: "/specter/ghostbusters"
+              time: "2022-05-19T02:27:56Z"
+              type: "BEING_CAPTURED"
+            ghost:
+              name: "Gertrude Aldridge"
+              originatingFilm: "Ghostbusters 2016"
+              classLevel: ["4"]

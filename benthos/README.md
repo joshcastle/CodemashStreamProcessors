@@ -580,9 +580,145 @@ output:
 
 ### Testing Your Processors
 
+
 Benthos also includes a handy
-[unit testing framework](https://www.benthos.dev/docs/configuration/unit_testing/),
-so there’s no excuse not to test your processors! No excuse at all.
+[unit testing framework](https://www.benthos.dev/docs/configuration/unit_testing/)!
+
+Test your processors.
+
+The testing framework is, like everything else in Benthos, clear and simple.
+Each test describes an input batch, which processors it’s testing, and the
+expected output batch. Here’s an example:
+
+```yaml
+tests:
+  - name: New Film Filter
+    target_processors: "../streams/4-filter.yaml#/pipeline/processors"
+    input_batch:
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "BEING_CAPTURED"
+          ghost:
+            name: "Zuul"
+            originatingFilm: "Ghostbusters"
+            classLevel: ["6", "7"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "Gertrude Aldridge"
+          ghost:
+            name: "Stay Puft Mashmallow Man"
+            originatingFilm: "Ghostbusters II"
+            classLevel: ["7"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "BEING_CAPTURED"
+          ghost:
+            name: "Slimer"
+            originatingFilm: "Ghostbusters"
+            classLevel: ["5"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "HAUNTING"
+          ghost:
+            name: "Muncher"
+            originatingFilm: "Ghostbusters Afterlife"
+            classLevel: ["6", "7"]
+      - json_content:
+          context:
+            id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+            source: "/specter/ghostbusters"
+            time: "2022-05-19T02:27:56Z"
+            type: "BEING_CAPTURED"
+          ghost:
+            name: "Gertrude Aldridge"
+            originatingFilm: "Ghostbusters 2016"
+            classLevel: ["4"]
+    output_batches:
+      - - json_equals:
+            context:
+              id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+              source: "/specter/ghostbusters"
+              time: "2022-05-19T02:27:56Z"
+              type: "HAUNTING"
+            ghost:
+              name: "Muncher"
+              originatingFilm: "Ghostbusters Afterlife"
+              classLevel: ["6", "7"]
+        - json_equals:
+            context:
+              id: "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6"
+              source: "/specter/ghostbusters"
+              time: "2022-05-19T02:27:56Z"
+              type: "BEING_CAPTURED"
+            ghost:
+              name: "Gertrude Aldridge"
+              originatingFilm: "Ghostbusters 2016"
+              classLevel: ["4"]
+```
+
+This example tests the New Film Filter processors. Run the tests as follows:
+
+```bash
+benthos test configs/tests/4-filter.yaml
+```
+
+This test is intentionally designed to fail, so you should see output like:
+
+```bash
+New Film Filter [line 2]:
+batch 0 message 0: json_equals: JSON content mismatch
+{
+    "context": {
+        "id": "008bc9ef-1486-4dc5-bc81-6a66c6b3bab6",
+        "source": "/specter/ghostbusters",
+        "time": "2022-05-19T02:27:56Z",
+        "type": "POSSESSING" => "HAUNTING"
+    },
+    "ghost": {
+        "classLevel": [
+            "6",
+            "7"
+        ],
+        "name": "Muncher",
+        "originatingFilm": "Ghostbusters Afterlife"
+    }
+}
+
+```
+
+This says the test expected to see `HAUNTING` but instead received
+`POSSESSING`. 
+
+Update the file at `benthos/configs/tests/test-4-filter.yaml` by changing the
+value for `type:` on line 63 to `POSSESSING`. Then rerun the test:
+
+```bash
+benthos test configs/tests/test-4-filter.yaml
+```
+
+You should now see:
+
+```bash
+Test 'configs/tests/test-4-filter.yaml' succeeded
+```
+
+If you have multiple tests, you can use wildcard matchers to run all of your tests at once with something like:
+
+```bash
+benthos test ./configs/tests/*.yaml
+```
 
 ## Wrapping Up
 
