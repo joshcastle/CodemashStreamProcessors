@@ -25,4 +25,4 @@ curl http://localhost:4195/streams/5-enrich --data-binary @configs/streams/5-enr
 ```
 ```bash
 benthos.exe test configs/tests/4-filter.yaml
-```bash
+```
